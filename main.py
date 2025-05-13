@@ -98,7 +98,7 @@ mbti_careers = {
         {"name": "최고 경영자 (CEO)", "keywords": ["문제 해결", "아이디어", "사람들과 소통", "데이터", "몸을 움직임"], "explanation": "조직의 문제를 해결하고 새로운 아이디어를 제시하며 다양한 사람들과 소통하여 조직을 이끌어가는 CEO 직무에 적합합니다.", "preparation": "경영학 등 관련 전공 및 다양한 실무 경험, 뛰어난 리더십 및 의사결정 능력, 시장 분석 및 전략 수립 능력, 문제 해결 능력", "majors": ["경영학과", "산업공학과", "경제학과"]},
         {"name": "프로젝트 매니저", "keywords": ["규칙/절차", "문제 해결", "사람들과 소통", "데이터"], "explanation": "정해진 규칙에 따라 프로젝트를 관리하고 문제를 해결하며 팀원들과 소통하는 프로젝트 관리 분야에 잘 맞을 수 있습니다.", "preparation": "관련 분야 전문 지식 및 프로젝트 관리 방법론 학습, 뛰어난 조직 및 계획 능력, 팀원과의 소통 및 협업 능력, 문제 해결 능력", "majors": ["산업공학과", "경영학과", "각 분야별 공학/자연과학 학과"]},
         {"name": "전략 기획가", "keywords": ["아이디어", "문제 해결", "데이터", "혼자 집중"], "explanation": "데이터 분석과 깊은 사고를 통해 새로운 전략 아이디어를 제시하고 문제를 해결하는 전략 기획 분야에 강점을 보일 수 있습니다.", "preparation": "경영학, 경제학 등 전공 또는 관련 분야 경험, 데이터 분석 능력, 논리적 사고력 및 전략 수립 능력, 시장 및 경쟁 환경 분석 능력", "majors": ["경영학과", "경제학과", "산업공학과", "데이터사이언스학과"]},
-        {"name": "컨설턴트", "keywords": ["문제 해결", "데이터", "사람들과 소통", "아이디어"], "explanation": "데이터 분석과 새로운 아이디어를 바탕으로 기업의 문제를 해결하고 고객과 소통하는 컨설팅 분야에 능숙합니다.", "preparation": "경영학, 경제학 등 전공 또는 관련 분야 전문성, 데이터 분석 능력, 논리적 사고력 및 문제 해결 능력, 고객과의 소통 및 프레젠테이션 능력", "majors": ["경영학과", "경제학과", "산업공학과", "데이터사이언스학과"]}
+        {"name": "컨설턴트", "keywords": ["문제 해결", "데이터", "사람들과 소통", "아이디어"], "explanation": "데이터 분석과 새로운 아이디어 바탕으로 기업의 문제를 해결하고 고객과 소통하는 컨설팅 분야에 능숙합니다.", "preparation": "경영학, 경제학 등 전공 또는 관련 분야 전문성, 데이터 분석 능력, 논리적 사고력 및 문제 해결 능력, 고객과의 소통 및 프레젠테이션 능력", "majors": ["경영학과", "경제학과", "산업공학과", "데이터사이언스학과"]}
     ]}
 }
 
@@ -199,11 +199,10 @@ if selected_mbti:
             checkbox_key = f"q{st.session_state.question_index}_opt{i}"
             # 세션 상태에 저장된 이전 선택 상태를 불러와 체크박스 초기값 설정
             initial_value = st.session_state.get(checkbox_key, False) # 기본값 False
+            # 체크박스 상태는 Streamlit이 자동으로 관리하므로, 명시적으로 할당하는 줄은 삭제합니다.
             if st.checkbox(option['text'], key=checkbox_key, value=initial_value):
                  selected_options_for_current_q.extend(option['keywords'])
                  current_q_selected_keys.append(checkbox_key) # 현재 선택된 옵션 키 저장
-            # 체크박스 상태를 세션에 저장
-            st.session_state[checkbox_key] = st.session_state[checkbox_key]
 
 
         # '다음 질문' 버튼
