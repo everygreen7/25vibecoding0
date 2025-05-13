@@ -102,6 +102,48 @@ mbti_careers = {
     ]}
 }
 
+# 순차 질문 정의
+# 각 질문은 딕셔너리 형태로, 'question'과 'options'를 포함합니다.
+# 'options'는 다시 딕셔너리 리스트로, 'text'와 해당 옵션 선택 시 추가될 'keywords'를 가집니다.
+sequential_questions = [
+    {
+        "question": "어떤 환경에서 일하는 것을 선호하시나요? 🤔",
+        "options": [
+            {"text": "사람들과 함께 소통하며 일하는 것 🤝", "keywords": ["사람들과 소통"]},
+            {"text": "혼자 집중하여 깊이 파고드는 것 🤫", "keywords": ["혼자 집중"]}
+        ]
+    },
+    {
+        "question": "일의 성격은 어떠해야 할까요? ✨",
+        "options": [
+            {"text": "정해진 규칙과 절차에 따라 안정적으로 일하는 것 📝", "keywords": ["규칙/절차", "안정적"]},
+            {"text": "새롭고 다양한 아이디어를 탐색하며 창의적으로 일하는 것 💡", "keywords": ["창의적", "아이디어"]}
+        ]
+    },
+    {
+        "question": "주로 어떤 종류의 활동에 흥미를 느끼나요? 📊💪",
+        "options": [
+            {"text": "정보나 데이터를 분석하고 활용하는 것 📊", "keywords": ["데이터"]},
+            {"text": "몸을 움직이며 활동적으로 일하는 것 💪", "keywords": ["몸을 움직임"]}
+        ]
+    },
+    {
+        "question": "일에서 중요하다고 생각하는 가치는 무엇인가요? 👍",
+        "options": [
+            {"text": "문제를 파악하고 해결하여 성과를 내는 것 🔧", "keywords": ["문제 해결"]},
+            {"text": "타인을 돕고 사회에 기여하는 것 💖", "keywords": ["사회봉사"]}
+        ]
+    }
+]
+
+# Streamlit session state 초기화
+if 'question_index' not in st.session_state:
+    st.session_state.question_index = 0
+if 'selected_preferences' not in st.session_state:
+    st.session_state.selected_preferences = []
+if 'mbti_selected' not in st.session_state:
+    st.session_state.mbti_selected = None
+
 # 웹 앱 타이틀 설정
 st.set_page_config(page_title="MBTI 기반 직업 추천 🚀", page_icon="👍")
 st.title("나에게 맞는 직업은 무엇일까? 🤔")
@@ -113,74 +155,89 @@ st.markdown("""
 
 # MBTI 선택 드롭다운
 mbti_options = list(mbti_careers.keys())
-selected_mbti = st.selectbox("당신의 MBTI 유형을 선택하세요:", mbti_options)
+selected_mbti = st.selectbox("당신의 MBTI 유형을 선택하세요:", mbti_options, key="mbti_select")
 
-# 선택된 MBTI에 따른 직업 추천 표시 및 후속 질문
+# MBTI 선택이 변경되면 세션 상태 초기화
+if st.session_state.mbti_selected != selected_mbti:
+    st.session_state.mbti_selected = selected_mbti
+    st.session_state.question_index = 0
+    st.session_state.selected_preferences = []
+    st.rerun() # MBTI 변경 시 페이지 새로고침하여 질문 초기화
+
+# 선택된 MBTI 정보 표시
 if selected_mbti:
     mbti_info = mbti_careers[selected_mbti]
     st.subheader(f"선택하신 MBTI는 {selected_mbti} ({mbti_info['name']}) 입니다! {mbti_info['emoji']}")
 
     st.write("이 MBTI 유형에게 일반적으로 추천되는 직업 목록입니다:")
+    # 일반 추천 목록은 항상 표시
     for career_info in mbti_info['careers']:
         st.markdown(f"- {career_info['name']} ✨")
 
     st.markdown("---") # 구분선 추가
 
     st.subheader("조금 더 자세히 알아볼까요? 🤔")
-    st.write("아래 항목들 중 당신의 흥미나 선호에 해당하는 것을 모두 선택해주세요.")
 
-    # 후속 질문 (선호도 체크박스)
-    # 각 체크박스의 key를 고유하게 설정하여 오류 방지
-    pref_people = st.checkbox("사람들과 소통하고 돕는 일 🤝", key="pref_people")
-    pref_data = st.checkbox("데이터를 분석하고 활용하는 일 📊", key="pref_data")
-    pref_creative = st.checkbox("새롭고 창의적인 아이디어를 내는 일 💡", key="pref_creative")
-    pref_rules = st.checkbox("규칙과 절차에 따라 안정적으로 일하는 것 📝", key="pref_rules")
-    pref_active = st.checkbox("몸을 움직이며 활동적으로 일하는 것 💪", key="pref_active")
-    pref_problem = st.checkbox("문제를 파악하고 해결하는 일 🔧", key="pref_problem")
-    pref_alone = st.checkbox("혼자 집중하여 깊이 파고드는 일 🤫", key="pref_alone") # 혼자 집중 추가
-    pref_idea = st.checkbox("추상적이거나 이론적인 아이디어를 다루는 일 ✨", key="pref_idea") # 아이디어 추가
+    # 순차 질문 표시 로직
+    if st.session_state.question_index < len(sequential_questions):
+        current_question_data = sequential_questions[st.session_state.question_index]
+        st.write(f"**질문 {st.session_state.question_index + 1}.** {current_question_data['question']}")
 
+        # 각 질문의 옵션에 대한 체크박스 생성
+        selected_options_for_current_q = []
+        for i, option in enumerate(current_question_data['options']):
+            # 고유한 키 생성
+            checkbox_key = f"q{st.session_state.question_index}_opt{i}"
+            if st.checkbox(option['text'], key=checkbox_key):
+                selected_options_for_current_q.extend(option['keywords'])
 
-    # 선택된 선호도에 따라 직업 추천 필터링
-    selected_preferences = []
-    if pref_people: selected_preferences.append("사람들과 소통")
-    if pref_data: selected_preferences.append("데이터")
-    if pref_creative: selected_preferences.append("창의적")
-    if pref_rules: selected_preferences.append("규칙/절차")
-    if pref_active: selected_preferences.append("몸을 움직임")
-    if pref_problem: selected_preferences.append("문제 해결")
-    if pref_alone: selected_preferences.append("혼자 집중")
-    if pref_idea: selected_preferences.append("아이디어")
+        # '다음 질문' 버튼
+        if st.button("다음 질문", key=f"next_q_button_{st.session_state.question_index}"):
+            # 현재 질문에서 선택된 키워드들을 세션 상태에 추가
+            st.session_state.selected_preferences.extend(selected_options_for_current_q)
+            # 다음 질문으로 인덱스 이동
+            st.session_state.question_index += 1
+            st.rerun() # 페이지 새로고침하여 다음 질문 표시
 
+    else: # 모든 질문 완료 후
+        st.write("모든 질문에 답변하셨습니다! 결과를 바탕으로 추천 직업을 알려드릴게요. 👇")
 
-    # 선택된 선호도와 직업 키워드를 매칭하여 점수 계산
-    career_scores = {}
-    for career_info in mbti_info['careers']:
-        score = 0
-        for keyword in career_info['keywords']:
-            if keyword in selected_preferences:
-                score += 1
-        career_scores[career_info['name']] = score
+        # 선택된 선호도와 직업 키워드를 매칭하여 점수 계산
+        career_scores = {}
+        for career_info in mbti_info['careers']:
+            score = 0
+            for keyword in career_info['keywords']:
+                if keyword in st.session_state.selected_preferences:
+                    score += 1
+            career_scores[career_info['name']] = score
 
-    # 점수가 높은 순서대로 정렬
-    sorted_careers = sorted(career_scores.items(), key=lambda item: item[1], reverse=True)
+        # 점수가 높은 순서대로 정렬
+        sorted_careers = sorted(career_scores.items(), key=lambda item: item[1], reverse=True)
 
-    st.markdown("---") # 구분선 추가
+        st.markdown("---") # 구분선 추가
 
-    st.subheader("당신의 선호도를 바탕으로 추천하는 직업은... 👇")
+        st.subheader("당신의 선호도를 바탕으로 추천하는 직업은... 👇")
 
-    # 상위 1-2개 직업 추천 (선호도 점수가 0점 이상인 경우만)
-    recommended_count = 0
-    for career, score in sorted_careers:
-        if score > 0 and recommended_count < 2:
-            st.markdown(f"**{career}** 👍 (선호도 일치도: {score}개)")
-            recommended_count += 1
-        elif recommended_count >= 2:
-            break # 2개 추천했으면 중단
+        # 상위 1-2개 직업 추천 (선호도 점수가 0점 이상인 경우만)
+        recommended_count = 0
+        for career, score in sorted_careers:
+            # 최소 1개 이상의 선호도 키워드가 일치하는 직업만 추천
+            if score > 0 and recommended_count < 2:
+                st.markdown(f"**{career}** 👍 (선호도 일치도: {score}개)")
+                recommended_count += 1
+            elif recommended_count >= 2:
+                break # 2개 추천했으면 중단
 
-    if recommended_count == 0:
-        st.write("선택하신 선호도와 일치하는 추천 직업을 찾기 어렵습니다. 다른 선호도를 선택해 보세요! 🤔")
+        if recommended_count == 0:
+            st.write("선택하신 선호도와 일치하는 추천 직업을 찾기 어렵습니다. 다른 선호도를 선택해 보세요! 🤔")
 
+        st.markdown("---") # 구분선 추가
+        # 다시 시작 버튼
+        if st.button("다시 시작하기 🔄", key="restart_button"):
+            st.session_state.question_index = 0
+            st.session_state.selected_preferences = []
+            st.session_state.mbti_selected = None # MBTI 선택도 초기화
+            st.rerun() # 페이지 새로고침
 
 st.markdown("""
 ---
